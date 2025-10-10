@@ -16,7 +16,7 @@ const STORAGE_KEYS = {
 // =========================================================================
 const GITHUB_USERNAME = "ImVermilion"; 
 const REPO_NAME = "CampamentoWoW"; 
-const GITHUB_TOKEN = "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"; 
+const GITHUB_TOKEN = "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"; 
 const COMMIT_AUTHOR_EMAIL = "thefer4death@gmail.com"; 
 // =========================================================================
 
@@ -646,3 +646,4 @@ window.removeItem = (itemName) => {
 // ==========================================================
 
 initializeCamp();
+
