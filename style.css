@@ -1,0 +1,441 @@
+/* FUENTES - Intenta usar una fuente de estilo medieval/RPG */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
+:root {
+    --color-bg: #4b3d2d; /* Marrón oscuro para fondo */
+    --color-pergamino: #f5e7c8; /* Color pergamino claro */
+    --color-madera: #754c24; /* Marrón para marcos y bordes */
+    --color-oro: #ffd700;
+    --color-plata: #c0c0c0;
+    --color-bronce: #cd7f32;
+    --color-texto: #333;
+    --color-acento: #dc3545; /* Rojo de acento para peligros o botones */
+    --color-fondo-dinero: #fffaf0; /* Color claro para la caja de monedas */
+}
+
+/* ======================================= */
+/* 1. GENERAL Y FONDO (Estilo Original) */
+/* ======================================= */
+body {
+    font-family: 'Cinzel', serif;
+    background-color: var(--color-bg);
+    color: var(--color-texto);
+    margin: 0;
+    padding: 20px;
+    background-image: url('URL_DE_TU_IMAGEN_DE_FONDO_WOW.jpg'); 
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+.camp-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: rgba(245, 231, 200, 0.95); /* Fondo pergamino semi-transparente */
+    border: 15px solid var(--color-madera);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    position: relative; /* Necesario para la barra de usuario */
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ======================================= */
+/* 2. HEADER Y UBICACIÓN */
+/* ======================================= */
+.camp-header {
+    text-align: center;
+    background-color: var(--color-madera);
+    color: var(--color-pergamino);
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 3px solid #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+.camp-header h1 { margin: 0; font-size: 1.5em; font-weight: 400;}
+
+#current-location {
+    font-size: 2.5em;
+    margin: 5px 0;
+    text-shadow: 2px 2px 2px #000;
+    width: 100%; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ======================================= */
+/* 3. MONEDAS (AJUSTADA) */
+/* ======================================= */
+.money-box {
+    text-align: center;
+    /* Usamos un color más claro para el fondo del dinero */
+    background-color: var(--color-fondo-dinero); 
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 2px dashed var(--color-madera);
+    display: flex;
+    justify-content: space-around;
+    position: relative;
+}
+
+.money-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 15px; /* Separación para mejorar la estética */
+}
+
+/* Estilo de los números de las monedas */
+.coin-display span {
+    font-weight: bold;
+    font-size: 1.5em;
+    margin: 0 10px;
+}
+
+/* Colores de los iconos y números */
+.money-item .gold-color { color: var(--color-oro); }
+.money-item .silver-color { color: var(--color-plata); }
+.money-item .copper-color { color: var(--color-bronce); }
+
+
+/* ======================================= */
+/* 4. CONTENIDO PRINCIPAL */
+/* ======================================= */
+.camp-content {
+    display: flex;
+    gap: 30px;
+}
+
+.camp-section { 
+    flex: 1;
+    padding: 20px;
+    background-color: var(--color-pergamino);
+    border: 5px solid var(--color-madera);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.camp-section h2 {
+    text-align: center;
+    border-bottom: 2px solid var(--color-madera);
+    padding-bottom: 10px;
+}
+
+/* TABLÓN DE MISIONES */
+.quest-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid var(--color-madera);
+    border-left: 5px solid; 
+    transition: all 0.3s;
+}
+
+.quest-item h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.2em;
+    color: #0056b3;
+}
+
+.quest-item p {
+    margin: 2px 0;
+}
+
+.quest-status {
+    font-weight: bold;
+    float: right;
+    padding: 3px 8px;
+    border-radius: 3px;
+    color: white;
+    font-size: 0.9em;
+}
+
+/* ESTADOS DE MISIÓN */
+.status-Nueva { background-color: #ffa500; } 
+.status-EnProgreso { background-color: #007bff; } 
+.status-Completada { background-color: #28a745; } 
+.status-Fallida { background-color: var(--color-acento); } 
+
+/* INVENTARIO */
+#inventory-list {
+    list-style: none;
+    padding: 0;
+}
+
+#inventory-list li {
+    padding: 8px;
+    border-bottom: 1px dashed var(--color-madera);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#inventory-list li:last-child {
+    border-bottom: none;
+}
+
+.item-quantity {
+    font-weight: bold;
+    color: #8b0000; 
+    margin-right: 5px;
+}
+
+/* ======================================= */
+/* 5. BOTONES Y FORMULARIOS DE EDICIÓN */
+/* ======================================= */
+
+.edit-btn, .add-btn {
+    background-color: var(--color-madera);
+    color: var(--color-pergamino);
+    border: 1px solid #333;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 1em; 
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.edit-btn:hover, .add-btn:hover {
+    background-color: #5a3c1f;
+}
+
+.money-box .edit-btn, .camp-header .edit-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 5px 10px;
+    margin: 0;
+}
+
+.add-btn {
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.edit-form {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px dashed var(--color-madera);
+    background-color: #fcf5e5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.edit-form input, .edit-form select {
+    padding: 8px;
+    border: 1px solid var(--color-madera);
+    background-color: #fffaf0;
+    flex-grow: 1;
+    font-family: 'Cinzel', serif;
+}
+
+.edit-form button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+}
+
+.quest-actions {
+    margin-top: 10px;
+    text-align: right;
+}
+.quest-actions button {
+    margin-left: 5px;
+    padding: 4px 8px;
+    font-size: 0.8em;
+    cursor: pointer;
+    background-color: #5f9ea0; 
+    color: white;
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-family: 'Cinzel', serif;
+}
+
+.item-remove {
+    background: none;
+    border: none;
+    color: var(--color-acento);
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+/* ======================================= */
+/* 6. HISTORIAL (PANEL FLOTANTE) */
+/* ======================================= */
+.history-toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--color-madera);
+    color: var(--color-pergamino);
+    border: 3px solid #333;
+    font-size: 1.5em;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.history-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 350px;
+    height: 100%;
+    background-color: rgba(69, 57, 47, 0.95); 
+    color: var(--color-pergamino);
+    z-index: 999; 
+    transform: translateX(100%); 
+    transition: transform 0.3s ease-in-out;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.history-panel.open {
+    transform: translateX(0);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--color-pergamino);
+    margin-bottom: 10px;
+}
+
+#reset-history-btn {
+    background-color: var(--color-acento); 
+    color: white;
+    border: 1px solid var(--color-pergamino);
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-family: 'Cinzel', serif;
+}
+
+#history-list {
+    list-style: none;
+    padding: 0;
+}
+
+#history-list li {
+    padding: 5px 0;
+    border-bottom: 1px dashed rgba(245, 231, 200, 0.3);
+    font-size: 0.9em;
+}
+
+/* Colores para el historial */
+.hist-money { color: var(--color-oro); }
+.hist-quest { color: #87ceeb; } 
+.hist-item { color: #90ee90; } 
+.hist-location { color: var(--color-acento); }
+
+
+/* ======================================= */
+/* 7. OVERLAY DE LOGIN Y BIENVENIDA */
+/* ======================================= */
+.overlay-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-box {
+    background-color: var(--color-pergamino);
+    border: 10px solid var(--color-madera);
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.login-box h2 {
+    color: var(--color-madera);
+    border-bottom: 2px solid var(--color-madera);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.login-box input {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 2px solid var(--color-madera);
+    width: 250px;
+    display: block; 
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    font-size: 1em;
+    font-family: 'Cinzel', serif;
+}
+
+.login-box button {
+    background-color: #5f9ea0; 
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 1.1em;
+    border-radius: 5px;
+    font-family: 'Cinzel', serif;
+}
+
+#login-message {
+    color: var(--color-acento);
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+/* ======================================= */
+/* 8. BARRA DE USUARIO Y LOGOUT */
+/* ======================================= */
+.user-info-bar {
+    position: absolute;
+    top: -45px;
+    right: 0;
+    z-index: 10;
+    background-color: var(--color-madera);
+    color: var(--color-pergamino);
+    padding: 8px 15px;
+    border-radius: 5px 5px 0 0;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
+}
+
+#current-user-display {
+    font-weight: bold;
+}
+
+.user-info-bar button {
+    background: none;
+    border: none;
+    color: var(--color-pergamino);
+    padding: 0;
+    cursor: pointer;
+    font-size: 1em;
+    text-decoration: underline;
+    opacity: 0.8;
+    font-family: 'Cinzel', serif;
+}
