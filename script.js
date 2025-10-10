@@ -16,7 +16,7 @@ const STORAGE_KEYS = {
 // =========================================================================
 const GITHUB_USERNAME = "ImVermilion"; 
 const REPO_NAME = "CampamentoWoW"; 
-const GITHUB_TOKEN = "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"; 
+const GITHUB_TOKEN = "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"; 
 const COMMIT_AUTHOR_EMAIL = "thefer4death@gmail.com"; 
 // =========================================================================
 
@@ -45,44 +45,51 @@ let campLocation, campMoney, campQuests, campInventory, campHistory;
 let shaForUpdate = ''; // Almacenará el SHA del data.json actual para poder actualizarlo
 
 /* --- Funciones de Persistencia Local --- */
+/* --- Funciones de Persistencia Local (Versión Revisada) --- */
 async function loadServerData() {
     try {
-        const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/data.json`;
-        const response = await fetch(url, {
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3.raw'
-            }
-        });
-
-        if (!response.ok) {
-            // Intenta cargar sin token (asumiendo que es público, o por fallos de red)
-            const fallbackResponse = await fetch('data.json');
-            if (fallbackResponse.ok) {
-                console.log("Cargando data.json sin API (fallback).");
-                return await fallbackResponse.json();
-            }
-            console.error(`Error al cargar data.json desde GitHub API (${response.status}).`);
-            return initialData; 
-        }
-
-        // Si la carga fue exitosa, obtenemos el SHA para futuras actualizaciones
-        const contentResponse = await fetch(url, {
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        const contentData = await contentResponse.json();
-        shaForUpdate = contentData.sha;
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/data.json`;
         
-        // Devolvemos el contenido del archivo
-        return JSON.parse(await response.text());
+        // 1. PRIMERO: Intentar obtener la información y el SHA con el Token (para la escritura)
+        const shaResponse = await fetch(apiUrl, {
+            headers: {
+                // No necesitamos el 'Accept' raw aquí, solo la información del archivo
+                'Authorization': `token ${GITHUB_TOKEN}`
+            }
+        });
+        
+        if (shaResponse.ok) {
+            const shaData = await shaResponse.json();
+            shaForUpdate = shaData.sha;
+            console.log("SHA obtenido correctamente. Escritura habilitada.");
+
+            // 2. SEGUNDO: Intentar cargar el contenido RAW directamente
+            // Usaremos la URL de GitHub Pages para la lectura (más fiable que la API raw)
+            const rawContentUrl = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/data.json`;
+            const rawResponse = await fetch(rawContentUrl);
+            
+            if (rawResponse.ok) {
+                return await rawResponse.json();
+            } else {
+                console.error("Fallo al obtener el contenido RAW desde GitHub Pages.");
+            }
+
+        } else {
+            console.error(`Error al obtener SHA desde GitHub API (${shaResponse.status}). Verifique el Token.`);
+        }
 
     } catch (error) {
         console.error("Error grave al intentar obtener data.json:", error);
-        return initialData;
     }
+    
+    // Si la lectura de la API o del RAW fallan, se usa el fallback de la versión estática
+    const fallbackResponse = await fetch('data.json');
+    if (fallbackResponse.ok) {
+        console.log("Cargando data.json sin API (fallback, solo lectura).");
+        return await fallbackResponse.json();
+    }
+    
+    return initialData; // Último recurso
 }
 
 // Decide si usa LocalStorage (copia local más reciente) o datos del servidor
@@ -644,6 +651,4 @@ window.removeItem = (itemName) => {
 // ==========================================================
 // 6. LLAMADA FINAL PARA INICIAR EL CAMPAMENTO
 // ==========================================================
-
 initializeCamp();
-
