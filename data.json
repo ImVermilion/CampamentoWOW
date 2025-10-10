@@ -1,0 +1,35 @@
+{
+    "location": "Torre de Vigía del Páramo de Poniente",
+    "money": {
+        "gold": 15,
+        "silver": 42,
+        "copper": 88
+    },
+    "quests": [
+        {
+            "id": 1,
+            "title": "El Engranaje Perdido",
+            "objective": "Recuperar la pieza del Gnomo Mecánico.",
+            "reward": "3 Oro, 5 Plata",
+            "status": "EnProgreso"
+        },
+        {
+            "id": 2,
+            "title": "Suministros de Lona",
+            "objective": "Cazar 10 lobos para obtener cuero de calidad.",
+            "reward": "10 Plata",
+            "status": "Nueva"
+        }
+    ],
+    "inventory": [
+        {
+            "name": "Poción de Sanación Mayor",
+            "quantity": 6
+        },
+        {
+            "name": "Manta de Viaje Gruesa",
+            "quantity": 4
+        }
+    ],
+    "history": []
+}
