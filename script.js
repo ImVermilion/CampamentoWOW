@@ -16,7 +16,7 @@ const STORAGE_KEYS = {
 // =========================================================================
 const GITHUB_USERNAME = "ImVermilion"; 
 const REPO_NAME = "CampamentoWoW"; 
-const GITHUB_TOKEN = "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"; 
+const GITHUB_TOKEN = "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"; 
 const COMMIT_AUTHOR_EMAIL = "thefer4death@gmail.com"; 
 // =========================================================================
 
@@ -644,4 +644,5 @@ window.removeItem = (itemName) => {
 // ==========================================================
 // 6. LLAMADA FINAL PARA INICIAR EL CAMPAMENTO
 // ==========================================================
+
 initializeCamp();
