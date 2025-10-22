@@ -1,5 +1,5 @@
 // ==========================================================
-// 1. CONSTANTES GLOBALES Y CONFIGURACIÓN DE GITHUB
+// 1. CONSTANTES GLOBALES Y CONFIGURACIÓN (SIN GITHUB)
 // ==========================================================
 const STORAGE_KEYS = {
     location: 'campLocation',
@@ -10,15 +10,6 @@ const STORAGE_KEYS = {
     currentUser: 'currentUser',
     isEditorLoggedIn: 'isEditorLoggedIn' 
 };
-
-// =========================================================================
-// !!! ATENCIÓN: DEBES REEMPLAZAR ESTOS VALORES CON TUS DATOS DE GITHUB !!!
-// =========================================================================
-const GITHUB_USERNAME = "ImVermilion"; 
-const REPO_NAME = "CampamentoWoW"; 
-const GITHUB_TOKEN = "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"; 
-const COMMIT_AUTHOR_EMAIL = "thefer4death@gmail.com"; 
-// =========================================================================
 
 // CÁMBIALA POR UNA CONTRASEÑA FUERTE Y COMPÁRTELA SOLO CON LOS EDITORES
 const GLOBAL_EDITOR_PASSWORD = "..LPeditor.."; 
@@ -42,51 +33,25 @@ let currentUser = localStorage.getItem(STORAGE_KEYS.currentUser) || null;
 let isEditor = localStorage.getItem(STORAGE_KEYS.isEditorLoggedIn) === 'true'; 
 let allowedUsersList = [];
 let campLocation, campMoney, campQuests, campInventory, campHistory; 
-let shaForUpdate = ''; // Almacenará el SHA del data.json actual para poder actualizarlo
+let currentQuestFilter = 'All'; // NUEVA VARIABLE PARA EL FILTRO ACTIVO
 
-/* --- Funciones de Persistencia Local --- */
-/* --- Funciones de Persistencia Local (Versión Revisada) --- */
+/* --- Funciones de Persistencia Local y Carga --- */
+
+/**
+ * Carga los datos del servidor (data.json) desde la ruta estática.
+ * Esto es SÓLO LECTURA, no tiene la lógica de la API de GitHub.
+ */
 async function loadServerData() {
     try {
-        const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/data.json`;
-        
-        // 1. PRIMERO: Intentar obtener la información y el SHA con el Token (para la escritura)
-        const shaResponse = await fetch(apiUrl, {
-            headers: {
-                // No necesitamos el 'Accept' raw aquí, solo la información del archivo
-                'Authorization': `token ${GITHUB_TOKEN}`
-            }
-        });
-        
-        if (shaResponse.ok) {
-            const shaData = await shaResponse.json();
-            shaForUpdate = shaData.sha;
-            console.log("SHA obtenido correctamente. Escritura habilitada.");
-
-            // 2. SEGUNDO: Intentar cargar el contenido RAW directamente
-            // Usaremos la URL de GitHub Pages para la lectura (más fiable que la API raw)
-            const rawContentUrl = `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/data.json`;
-            const rawResponse = await fetch(rawContentUrl);
-            
-            if (rawResponse.ok) {
-                return await rawResponse.json();
-            } else {
-                console.error("Fallo al obtener el contenido RAW desde GitHub Pages.");
-            }
-
+        const response = await fetch('data.json');
+        if (response.ok) {
+            console.log("Cargando data.json desde el servidor/local.");
+            return await response.json();
         } else {
-            console.error(`Error al obtener SHA desde GitHub API (${shaResponse.status}). Verifique el Token.`);
+            console.error("Fallo al obtener el data.json estático.");
         }
-
     } catch (error) {
-        console.error("Error grave al intentar obtener data.json:", error);
-    }
-    
-    // Si la lectura de la API o del RAW fallan, se usa el fallback de la versión estática
-    const fallbackResponse = await fetch('data.json');
-    if (fallbackResponse.ok) {
-        console.log("Cargando data.json sin API (fallback, solo lectura).");
-        return await fallbackResponse.json();
+        console.error("Error al intentar obtener data.json:", error);
     }
     
     return initialData; // Último recurso
@@ -113,19 +78,15 @@ const setStorageData = (key, data) => {
 
 
 // ==========================================================
-// 2. FUNCIÓN DE GUARDADO EN GITHUB (EL NÚCLEO)
+// 2. FUNCIÓN DE EXPORTACIÓN (REEMPLAZA EL GUARDADO EN GITHUB)
 // ==========================================================
 
-async function saveServerData(commitMessage) {
+window.exportData = () => {
     if (!isEditor) {
-        alert("Permiso denegado. Solo los editores pueden guardar en GitHub.");
+        alert("Permiso denegado. Solo los editores pueden exportar la data.");
         return;
     }
-    if (!GITHUB_TOKEN || GITHUB_TOKEN === "TU_TOKEN_DE_ACCESO_PERSONAL") {
-        alert("ERROR: La aplicación no está configurada para guardar en GitHub. Completa GITHUB_TOKEN en script.js.");
-        return;
-    }
-    
+
     // 1. Compilar todos los datos
     const fullState = {
         location: campLocation,
@@ -136,54 +97,26 @@ async function saveServerData(commitMessage) {
     };
     
     const dataStr = JSON.stringify(fullState, null, 4); 
-    // GitHub API requiere el contenido en Base64
-    const base64Content = btoa(unescape(encodeURIComponent(dataStr)));
-
-    // 2. Preparar el payload para la API
-    const payload = {
-        message: commitMessage || `Update by ${currentUser}: ${new Date().toLocaleDateString()}`,
-        content: base64Content,
-        sha: shaForUpdate, // Usamos el SHA que obtuvimos al cargar para sobrescribir
-        committer: {
-            name: currentUser || GITHUB_USERNAME,
-            email: COMMIT_AUTHOR_EMAIL
-        }
-    };
-
-    // 3. Enviar la solicitud PUT a la API de GitHub
-    const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/data.json`;
+    const filename = 'data.json';
+    const blob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
     
-    try {
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            shaForUpdate = result.content.sha; // Actualizar el SHA para la próxima edición
-            console.log("Guardado exitoso en GitHub. Nuevo SHA:", shaForUpdate);
-            alert("✅ ¡Cambios guardados y compartidos globalmente!");
-            return true;
-        } else {
-            const errorData = await response.json();
-            console.error("Error al guardar en GitHub:", errorData);
-            alert(`❌ Error al guardar en GitHub: ${errorData.message || 'Verifica tu token y permisos.'}`);
-            return false;
-        }
-    } catch (error) {
-        console.error("Error de red durante el guardado:", error);
-        alert("❌ Error de conexión al intentar guardar en GitHub.");
-        return false;
-    }
+    // 2. Crear un enlace de descarga
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // 3. Limpiar y avisar
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert("✅ ¡Archivo data.json exportado! Súbelo manualmente a GitHub.");
 }
 
 
-// Función Wrapper para actualizar LocalStorage Y GitHub
+// Función Wrapper para actualizar LocalStorage (SIN GitHub)
 function updateAllData(logType, logMessage, commitMessage) {
     // Primero, guardamos en LocalStorage
     setStorageData(STORAGE_KEYS.location, campLocation);
@@ -195,8 +128,7 @@ function updateAllData(logType, logMessage, commitMessage) {
     // Luego, registramos el evento en el historial local
     if (logType) logHistory(logType, logMessage);
 
-    // Finalmente, guardamos el estado completo en el servidor
-    saveServerData(commitMessage);
+    console.log(`Cambios guardados localmente. ¡Recuerda exportar y subir!`);
 }
 
 
@@ -216,7 +148,7 @@ async function loadWhitelist() {
 }
 
 // ==========================================================
-// 3. LÓGICA DE LOGIN Y PERMISOS (Sin cambios significativos)
+// 3. LÓGICA DE LOGIN Y PERMISOS 
 // ==========================================================
 
 window.showLogin = () => {
@@ -266,7 +198,7 @@ window.logoutUser = () => {
 
 /** Muestra u oculta los botones de edición y actualiza la barra de usuario */
 function updatePermissionsUI() {
-    const editElements = document.querySelectorAll('.edit-btn, .add-btn, .quest-actions button, .item-remove, #reset-history-btn');
+    const editElements = document.querySelectorAll('.edit-btn, .add-btn, .quest-actions button, .item-remove, #reset-history-btn, #export-data-btn');
     
     const displayStyle = isEditor ? 'inline-block' : 'none';
     
@@ -320,8 +252,8 @@ window.resetHistory = () => {
     if (confirm("¿Estás seguro de que quieres BORRAR PERMANENTEMENTE todo el historial del campamento?")) {
         campHistory = [];
         renderHistory();
-        updateAllData(null, null, "History reset.");
-        alert("Historial reseteado para todos.");
+        updateAllData(null, null, "History reset."); 
+        alert("Historial reseteado. ¡Recuerda exportar la data!");
     }
 };
 
@@ -375,7 +307,6 @@ const logHistory = (type, message) => {
     const timestamp = new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
     campHistory.unshift({ timestamp, type, message });
     if (campHistory.length > 50) campHistory.pop(); 
-    // Nota: El setStorageData y el renderHistory se llaman dentro de updateAllData ahora
     renderHistory();
 };
 
@@ -410,7 +341,30 @@ function renderQuests() {
 
     if (!Array.isArray(campQuests)) campQuests = initialData.quests;
 
-    campQuests.forEach(quest => {
+    // FILTRAR las misiones basándose en el filtro activo
+    const filteredQuests = campQuests.filter(quest => 
+        currentQuestFilter === 'All' || quest.status === currentQuestFilter
+    );
+
+    // Clasificación: Las misiones 'Nueva' y 'EnProgreso' se muestran primero (por ID descendente).
+    // Las Completadas/Fallidas se pueden mostrar en cualquier orden.
+    const questsToRender = filteredQuests.sort((a, b) => {
+        // Mantenemos la lógica de ordenamiento por ID, que asume que IDs más altos son más nuevos.
+        // Las nuevas o en progreso se muestran primero.
+        if (currentQuestFilter === 'All' || currentQuestFilter === 'Nueva' || currentQuestFilter === 'EnProgreso') {
+            return b.id - a.id; // Más nuevas primero
+        }
+        return a.id - b.id; // Puede ser al revés si se quiere un orden de historial.
+    });
+    
+    if (questsToRender.length === 0) {
+        // Aseguramos que el estado del filtro se muestre correctamente en el mensaje
+        const filterText = currentQuestFilter === 'All' ? 'la lista' : `estado "${currentQuestFilter}"`;
+        questListContainer.innerHTML = `<p style="text-align: center; color: var(--color-madera);">No hay misiones en ${filterText}.</p>`;
+        return;
+    }
+    
+    questsToRender.forEach(quest => {
         const item = document.createElement('div');
         item.className = 'quest-item';
         item.style.borderLeftColor = getStatusColor(quest.status);
@@ -433,6 +387,28 @@ function renderQuests() {
         `;
         questListContainer.appendChild(item);
     });
+}
+
+/**
+ * Función que actualiza el filtro de misiones y renderiza la lista.
+ * @param {string} filter - El estado de la misión a filtrar ('All', 'Nueva', 'EnProgreso', 'Completada', 'Fallida').
+ */
+window.filterQuests = (filter) => {
+    // 1. Actualizar la variable global
+    currentQuestFilter = filter;
+    
+    // 2. Actualizar el estado visual de los botones
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => {
+        if (btn.getAttribute('data-filter') === filter) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 3. Re-renderizar las misiones con el nuevo filtro
+    renderQuests();
 }
 
 function renderInventory() {
@@ -496,6 +472,7 @@ window.toggleHistory = () => {
 
 // ==========================================================
 // 5. FUNCIONES DE EDICIÓN CON GUARDADO AUTOMÁTICO
+// (El guardado ahora es SOLO local)
 // ==========================================================
 
 window.toggleLocationEdit = () => {
@@ -559,7 +536,10 @@ window.addQuest = () => {
     if (title && objective) {
         const newId = campQuests.length > 0 ? Math.max(...campQuests.map(q => q.id)) + 1 : 1;
         campQuests.unshift({ id: newId, title, objective, reward, status: 'Nueva' });
-        renderQuests(); 
+        
+        // Tras añadir la misión, cambiamos el filtro a 'All' o 'Nueva' para asegurar que la vea
+        window.filterQuests('All'); 
+
         updateAllData('quest', `Nueva misión añadida: ${title}`, `Added quest: ${title}`);
         
         document.getElementById('quest-title').value = '';

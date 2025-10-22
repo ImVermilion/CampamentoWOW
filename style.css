@@ -439,3 +439,50 @@ body {
     opacity: 0.8;
     font-family: 'Cinzel', serif;
 }
+
+
+/* ======================================= */
+/* 9. MISIONES (QUESTS) */
+/* ======================================= */
+.quest-filters {
+    display: flex;
+    justify-content: space-around; /* Distribuye los botones */
+    flex-wrap: wrap; /* Para que se adapten si hay muchos */
+    margin-bottom: 20px;
+    padding: 10px 0;
+    border-top: 1px solid var(--color-pergamino-oscuro);
+    border-bottom: 1px solid var(--color-pergamino-oscuro);
+}
+
+.filter-btn {
+    background-color: var(--color-pergamino);
+    color: var(--color-madera);
+    border: 2px solid var(--color-madera);
+    padding: 8px 15px;
+    margin: 5px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9em;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background-color: var(--color-madera);
+    color: var(--color-pergamino);
+}
+
+.filter-btn.active {
+    background-color: var(--color-acento); /* Color acento para activo */
+    color: white;
+    border-color: var(--color-acento);
+    box-shadow: 0 0 5px rgba(220, 53, 69, 0.7);
+}
+
+.filter-btn i {
+    margin-right: 5px;
+}
+/* Estilos existentes para quest-item, etc., van aquí. */
+.quest-item {
+    
+}
