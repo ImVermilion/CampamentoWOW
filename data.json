@@ -1,13 +1,23 @@
 {
     "location": "Páramos de Poniente",
     "money": {
-        "gold": 15,
-        "silver": 42,
-        "copper": 88
+        "gold": 8,
+        "silver": 10,
+        "copper": 73
     },
     "quests": [],
     "inventory": [],
     "history": [
+        {
+            "timestamp": "17:34",
+            "type": "money",
+            "message": "Dinero actualizado. Nuevo saldo: 8 O, 10 P, 73 B."
+        },
+        {
+            "timestamp": "17:34",
+            "type": "money",
+            "message": "Dinero actualizado. Nuevo saldo: 8 O, 42 P, 88 B."
+        },
         {
             "timestamp": "12:07",
             "type": "quest",
