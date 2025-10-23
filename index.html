@@ -10,6 +10,12 @@
 <body>
     <audio id="background-music" src="TU_URL_DE_MUSICA_WOW.mp3" autoplay loop></audio>
 
+    <div class="main-tabs">
+        <button id="camp-tab-btn" class="tab-btn active" onclick="showTab('camp-tab')">
+            <i class="fas fa-campground"></i> Campamento
+        </button>
+    </div>
+
     <button class="history-toggle-btn" onclick="toggleHistory()">
         <i class="fas fa-book"></i>
     </button>
@@ -39,10 +45,15 @@
             <p id="login-message"></p>
         </div>
     </div>
+    
     <div class="camp-container">
         
         <div id="user-info-bar" class="user-info-bar hidden">
             <span id="current-user-display"></span>
+            
+            <button id="sync-data-btn" class="edit-btn" onclick="syncGlobalData(false)">
+                <i class="fas fa-sync-alt"></i> Sincronizar Data Global
+            </button>
             
             <button id="export-data-btn" class="edit-btn" onclick="exportData()">
                 <i class="fas fa-file-export"></i> Exportar Data
@@ -52,88 +63,92 @@
                 <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
             </button>
         </div>
+        
+        <div id="camp-tab" class="content-tab">
+            <header class="camp-header">
+                <h1>Ubicación Actual</h1>
+                <h2 id="current-location"></h2>
+                <div id="location-edit-form" class="edit-form hidden">
+                    <input type="text" id="new-location-input" placeholder="Nueva ubicación">
+                    <button onclick="saveLocation()">Guardar</button>
+                </div>
+            </header>
 
-        <header class="camp-header">
-            <h1>Ubicación Actual</h1>
-            <h2 id="current-location"></h2>
-            <div id="location-edit-form" class="edit-form hidden">
-                <input type="text" id="new-location-input" placeholder="Nueva ubicación">
-                <button onclick="saveLocation()">Guardar</button>
-            </div>
-        </header>
+            <section class="money-box">
+                <div class="money-item">
+                    <i class="fas fa-coins gold"></i>
+                    <span id="gold-amount">0</span>
+                    <span>Oro</span>
+                </div>
+                <div class="money-item">
+                    <i class="fas fa-coins silver"></i>
+                    <span id="silver-amount">0</span>
+                    <span>Plata</span>
+                </div>
+                <div class="money-item">
+                    <i class="fas fa-coins copper"></i>
+                    <span id="copper-amount">0</span>
+                    <span>Cobre</span>
+                </div>
+                <button class="edit-btn" onclick="toggleMoneyEdit()">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <div id="money-edit-form" class="edit-form money-form hidden">
+                    <input type="number" id="money-g" placeholder="Oro">
+                    <input type="number" id="money-s" placeholder="Plata">
+                    <input type="number" id="money-c" placeholder="Cobre">
+                    <button onclick="updateMoney()">Guardar</button>
+                </div>
+            </section>
 
-        <section class="money-box">
-            <div class="money-item">
-                <i class="fas fa-coins gold"></i>
-                <span id="gold-amount">0</span>
-                <span>Oro</span>
-            </div>
-            <div class="money-item">
-                <i class="fas fa-coins silver"></i>
-                <span id="silver-amount">0</span>
-                <span>Plata</span>
-            </div>
-            <div class="money-item">
-                <i class="fas fa-coins copper"></i>
-                <span id="copper-amount">0</span>
-                <span>Cobre</span>
-            </div>
-            <button class="edit-btn" onclick="toggleMoneyEdit()">
-                <i class="fas fa-pen"></i>
-            </button>
-            <div id="money-edit-form" class="edit-form money-form hidden">
-                <input type="number" id="money-g" placeholder="Oro">
-                <input type="number" id="money-s" placeholder="Plata">
-                <input type="number" id="money-c" placeholder="Cobre">
-                <button onclick="updateMoney()">Guardar</button>
-            </div>
-        </section>
-
-        <main class="camp-content">
-            
-            <section class="camp-section">
-                <h2>Misiones (Quests)</h2>
+            <main class="camp-content">
                 
-                <div class="quest-filters">
-                    <button class="filter-btn active" data-filter="All" onclick="filterQuests('All')">
-                        <i class="fas fa-list"></i> Todo
-                    </button>
-                    <button class="filter-btn" data-filter="Nueva" onclick="filterQuests('Nueva')">
-                        <i class="fas fa-scroll"></i> Nuevas
-                    </button>
-                    <button class="filter-btn" data-filter="EnProgreso" onclick="filterQuests('EnProgreso')">
-                        <i class="fas fa-hourglass-half"></i> En Curso
-                    </button>
-                    <button class="filter-btn" data-filter="Completada" onclick="filterQuests('Completada')">
-                        <i class="fas fa-check-circle"></i> Completadas
-                    </button>
-                    <button class="filter-btn" data-filter="Fallida" onclick="filterQuests('Fallida')">
-                        <i class="fas fa-times-circle"></i> Fallidas
-                    </button>
-                </div>
-                <div id="quest-list">
+                <section class="camp-section">
+                    <h2>Misiones (Quests)</h2>
+                    
+                    <div class="quest-filters">
+                        <button class="filter-btn active" data-filter="All" onclick="filterQuests('All')">
+                            <i class="fas fa-list"></i> Todo
+                        </button>
+                        <button class="filter-btn" data-filter="Nueva" onclick="filterQuests('Nueva')">
+                            <i class="fas fa-scroll"></i> Nuevas
+                        </button>
+                        <button class="filter-btn" data-filter="EnProgreso" onclick="filterQuests('EnProgreso')">
+                            <i class="fas fa-hourglass-half"></i> En Curso
+                        </button>
+                        <button class="filter-btn" data-filter="Completada" onclick="filterQuests('Completada')">
+                            <i class="fas fa-check-circle"></i> Completadas
+                        </button>
+                        <button class="filter-btn" data-filter="Fallida" onclick="filterQuests('Fallida')">
+                            <i class="fas fa-times-circle"></i> Fallidas
+                        </button>
                     </div>
-                <button class="add-btn" onclick="toggleQuestForm()">+ Añadir Misión</button>
-                <div id="quest-form" class="edit-form hidden">
-                    <input type="text" id="quest-title" placeholder="Título de la Misión" required>
-                    <input type="text" id="quest-objective" placeholder="Objetivo de la Misión" required>
-                    <input type="text" id="quest-reward" placeholder="Recompensa (Opcional)">
-                    <button onclick="addQuest()">Añadir</button>
-                </div>
-            </section>
 
-            <section class="camp-section">
-                <h2>Inventario</h2>
-                <ul id="inventory-list">
-                    </ul>
-                <button class="add-btn" onclick="toggleInventoryForm()">+ Añadir Objeto</button>
-                <div id="inventory-form" class="edit-form inventory-form hidden">
-                    <input type="text" id="item-name" placeholder="Nombre del Objeto" required>
-                    <input type="number" id="item-quantity" value="1" min="1" required>
-                    <button onclick="addItem()">Añadir</button>
-                </div>
-            </section>
-        </main>
+                    <div id="quest-list">
+                        </div>
+                    <button class="add-btn" onclick="toggleQuestForm()">+ Añadir Misión</button>
+                    <div id="quest-form" class="edit-form hidden">
+                        <input type="text" id="quest-title" placeholder="Título de la Misión" required>
+                        <input type="text" id="quest-objective" placeholder="Objetivo de la Misión" required>
+                        <input type="text" id="quest-reward" placeholder="Recompensa (Opcional)">
+                        <button onclick="addQuest()">Añadir</button>
+                    </div>
+                </section>
+
+                <section class="camp-section">
+                    <h2>Inventario</h2>
+                    <ul id="inventory-list">
+                        </ul>
+                    <button class="add-btn" onclick="toggleInventoryForm()">+ Añadir Objeto</button>
+                    <div id="inventory-form" class="edit-form inventory-form hidden">
+                        <input type="text" id="item-name" placeholder="Nombre del Objeto" required>
+                        <input type="number" id="item-quantity" value="1" min="1" required>
+                        <button onclick="addItem()">Añadir</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+        
     </div>
 
     <script src="script.js" defer></script>

@@ -39,11 +39,11 @@ let currentQuestFilter = 'All'; // NUEVA VARIABLE PARA EL FILTRO ACTIVO
 
 /**
  * Carga los datos del servidor (data.json) desde la ruta estática.
- * Esto es SÓLO LECTURA, no tiene la lógica de la API de GitHub.
  */
 async function loadServerData() {
     try {
-        const response = await fetch('data.json');
+        // Para forzar una descarga "fresca" del servidor, podrías añadir un timestamp.
+        const response = await fetch(`data.json?v=${new Date().getTime()}`);
         if (response.ok) {
             console.log("Cargando data.json desde el servidor/local.");
             return await response.json();
@@ -78,7 +78,7 @@ const setStorageData = (key, data) => {
 
 
 // ==========================================================
-// 2. FUNCIÓN DE EXPORTACIÓN (REEMPLAZA EL GUARDADO EN GITHUB)
+// 2. FUNCIÓN DE EXPORTACIÓN Y SINCRONIZACIÓN DE DATA
 // ==========================================================
 
 window.exportData = () => {
@@ -93,7 +93,7 @@ window.exportData = () => {
         money: campMoney,
         quests: campQuests,
         inventory: campInventory,
-        history: campHistory
+        history: campHistory // Exporta la historia completa
     };
     
     const dataStr = JSON.stringify(fullState, null, 4); 
@@ -112,7 +112,52 @@ window.exportData = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    alert("✅ ¡Archivo data.json exportado! Súbelo manualmente a GitHub.");
+    alert("✅ ¡Archivo data.json exportado! Súbelo manualmente a GitHub para que otros puedan sincronizarlo.");
+}
+
+/** * NUEVO: Fuerza la recarga de los datos del campamento desde el servidor (data.json)
+ * y sobrescribe la copia local (LocalStorage).
+ * @param {boolean} silent - Si es true, no muestra el diálogo de confirmación ni el mensaje final.
+ */
+window.syncGlobalData = async (silent = false) => {
+    if (!silent) {
+        if (!confirm("Esto forzará la descarga de la data global (data.json) y sobrescribirá los datos locales de Ubicación, Dinero, Misiones, Inventario e Historial. ¿Continuar?")) {
+            return;
+        }
+    }
+
+    try {
+        const serverData = await loadServerData(); // Carga data.json
+
+        // 1. Sobrescribir LocalStorage con la data del servidor
+        campLocation = serverData.location;
+        campMoney = serverData.money;
+        campQuests = serverData.quests;
+        campInventory = serverData.inventory;
+        campHistory = serverData.history; // Sobrescribimos la historia para que sea la versión de GitHub
+
+        // 2. Actualizar LocalStorage con la nueva data global
+        setStorageData(STORAGE_KEYS.location, campLocation);
+        setStorageData(STORAGE_KEYS.money, campMoney);
+        setStorageData(STORAGE_KEYS.quests, campQuests);
+        setStorageData(STORAGE_KEYS.inventory, campInventory);
+        setStorageData(STORAGE_KEYS.history, campHistory);
+        
+        // 3. Re-renderizar la UI
+        renderLocation();
+        renderMoney();
+        renderQuests(); 
+        renderInventory();
+        renderHistory();
+        
+        if (!silent) {
+             alert("✅ Sincronización completa. La data global ha sido cargada.");
+        }
+        
+    } catch (error) {
+        console.error("Error durante la sincronización de data global:", error);
+        alert("❌ Error al sincronizar la data global. Revisa la consola.");
+    }
 }
 
 
@@ -123,7 +168,7 @@ function updateAllData(logType, logMessage, commitMessage) {
     setStorageData(STORAGE_KEYS.money, campMoney);
     setStorageData(STORAGE_KEYS.quests, campQuests);
     setStorageData(STORAGE_KEYS.inventory, campInventory);
-    setStorageData(STORAGE_KEYS.history, campHistory);
+    setStorageData(STORAGE_KEYS.history, campHistory); // Guardar historia
     
     // Luego, registramos el evento en el historial local
     if (logType) logHistory(logType, logMessage);
@@ -156,7 +201,7 @@ window.showLogin = () => {
     document.getElementById('login-overlay').classList.remove('hidden');
 };
 
-window.loginUser = () => {
+window.loginUser = async () => {
     const user = document.getElementById('username-input').value.trim();
     const password = document.getElementById('password-input').value;
     const message = document.getElementById('login-message');
@@ -183,7 +228,12 @@ window.loginUser = () => {
     }
     
     document.getElementById('login-overlay').classList.add('hidden');
+    
+    // IMPORTANTE: Sincronizar la data al iniciar sesión para que el usuario vea lo último de GitHub.
+    await syncGlobalData(true); 
+    
     updatePermissionsUI();
+    showTab('camp-tab'); // Mostrar el campamento tras login
 };
 
 window.logoutUser = () => {
@@ -198,12 +248,16 @@ window.logoutUser = () => {
 
 /** Muestra u oculta los botones de edición y actualiza la barra de usuario */
 function updatePermissionsUI() {
+    // Añadimos #sync-data-btn al querySelectorAll para mostrarlo/ocultarlo
     const editElements = document.querySelectorAll('.edit-btn, .add-btn, .quest-actions button, .item-remove, #reset-history-btn, #export-data-btn');
     
     const displayStyle = isEditor ? 'inline-block' : 'none';
     
     editElements.forEach(el => {
-        if (el.tagName === 'DIV' && el.classList.contains('quest-actions')) {
+        // El botón de sincronización es visible para TODOS, no solo editores
+        if (el.id === 'sync-data-btn') {
+            el.style.display = 'inline-block';
+        } else if (el.tagName === 'DIV' && el.classList.contains('quest-actions')) {
             el.style.display = isEditor ? 'block' : 'none';
         } else {
             el.style.display = displayStyle;
@@ -240,6 +294,20 @@ function updatePermissionsUI() {
     renderHistory();
 }
 
+/** Función dummy para showTab */
+window.showTab = (tabId) => {
+    document.querySelectorAll('.content-tab').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    document.getElementById(tabId).classList.remove('hidden');
+    document.getElementById(tabId.replace('-tab', '-tab-btn')).classList.add('active');
+}
+
+
 // ==========================================================
 // 4. FUNCIONES DE RESET, LOGGING Y RENDERIZADO
 // ==========================================================
@@ -261,15 +329,19 @@ async function initializeCamp() {
     // 1. Cargar la Whitelist
     await loadWhitelist();
 
-    // 2. Cargar los datos desde el servidor (data.json)
-    const serverData = await loadServerData();
+    // 2. Cargar los datos más recientes del servidor para inicializar las variables
+    await syncGlobalData(true); // Carga la data global y la guarda en LocalStorage
 
-    // 3. Inicializar las variables usando LocalStorage (si existe) o ServerData
+    // 3. Ahora cargamos las variables a partir del LocalStorage recién actualizado
+    // Usamos loadServerData() para obtener la referencia de la data y que getStorageData() pueda trabajar
+    const serverData = await loadServerData(); 
+    
     campLocation = getStorageData(STORAGE_KEYS.location, serverData);
     campMoney = getStorageData(STORAGE_KEYS.money, serverData);
     campQuests = getStorageData(STORAGE_KEYS.quests, serverData);
     campInventory = getStorageData(STORAGE_KEYS.inventory, serverData);
-    campHistory = getStorageData(STORAGE_KEYS.history, serverData);
+    campHistory = getStorageData(STORAGE_KEYS.history, serverData); // Usa la historia del LS (que viene de la última sync)
+
 
     // 4. Verificar permisos (igual que antes)
     if (localStorage.getItem(STORAGE_KEYS.isEditorLoggedIn) === 'true' && currentUser) {
@@ -346,19 +418,14 @@ function renderQuests() {
         currentQuestFilter === 'All' || quest.status === currentQuestFilter
     );
 
-    // Clasificación: Las misiones 'Nueva' y 'EnProgreso' se muestran primero (por ID descendente).
-    // Las Completadas/Fallidas se pueden mostrar en cualquier orden.
     const questsToRender = filteredQuests.sort((a, b) => {
-        // Mantenemos la lógica de ordenamiento por ID, que asume que IDs más altos son más nuevos.
-        // Las nuevas o en progreso se muestran primero.
         if (currentQuestFilter === 'All' || currentQuestFilter === 'Nueva' || currentQuestFilter === 'EnProgreso') {
-            return b.id - a.id; // Más nuevas primero
+            return b.id - a.id; 
         }
-        return a.id - b.id; // Puede ser al revés si se quiere un orden de historial.
+        return a.id - b.id; 
     });
     
     if (questsToRender.length === 0) {
-        // Aseguramos que el estado del filtro se muestre correctamente en el mensaje
         const filterText = currentQuestFilter === 'All' ? 'la lista' : `estado "${currentQuestFilter}"`;
         questListContainer.innerHTML = `<p style="text-align: center; color: var(--color-madera);">No hay misiones en ${filterText}.</p>`;
         return;
@@ -391,13 +458,10 @@ function renderQuests() {
 
 /**
  * Función que actualiza el filtro de misiones y renderiza la lista.
- * @param {string} filter - El estado de la misión a filtrar ('All', 'Nueva', 'EnProgreso', 'Completada', 'Fallida').
  */
 window.filterQuests = (filter) => {
-    // 1. Actualizar la variable global
     currentQuestFilter = filter;
     
-    // 2. Actualizar el estado visual de los botones
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
         if (btn.getAttribute('data-filter') === filter) {
@@ -407,7 +471,6 @@ window.filterQuests = (filter) => {
         }
     });
 
-    // 3. Re-renderizar las misiones con el nuevo filtro
     renderQuests();
 }
 
@@ -537,7 +600,6 @@ window.addQuest = () => {
         const newId = campQuests.length > 0 ? Math.max(...campQuests.map(q => q.id)) + 1 : 1;
         campQuests.unshift({ id: newId, title, objective, reward, status: 'Nueva' });
         
-        // Tras añadir la misión, cambiamos el filtro a 'All' o 'Nueva' para asegurar que la vea
         window.filterQuests('All'); 
 
         updateAllData('quest', `Nueva misión añadida: ${title}`, `Added quest: ${title}`);
